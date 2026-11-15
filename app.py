@@ -44,22 +44,30 @@ def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
 
 
 from datetime import time
+import re
 from statistics import median
 
 
 def run(data):
     faixas = []
+    horarios = set()
     for item in data["faixas"]:
-        hora = time.fromisoformat(texto(item["hora"]))
-        if hora.tzinfo or hora.second or hora.microsecond:
+        hora_texto = texto(item["hora"])
+        if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", hora_texto):
             raise ValueError("Use horas e minutos locais no formato HH:MM.")
+        hora = time.fromisoformat(hora_texto)
+        if hora_texto in horarios:
+            raise ValueError(f"Faixa horária duplicada: {hora_texto}.")
+        horarios.add(hora_texto)
         tempos = [numero(x, 0.01) for x in item["tempos"]]
         if not tempos:
             raise ValueError("Informe ao menos uma observação de tempo por faixa.")
         faixas.append({"hora": hora.isoformat(timespec="minutes"),
                        "mediana_minutos": median(tempos), "observacoes": len(tempos)})
+    if not faixas:
+        raise ValueError("Informe ao menos uma faixa horária.")
     faixas.sort(key=lambda item: (item["mediana_minutos"], -item["observacoes"], item["hora"]))
-    return {"faixas": faixas, "melhor_faixa": faixas[0]["hora"] if faixas else None,
+    return {"faixas": faixas, "melhor_faixa": faixas[0]["hora"],
             "google_maps": rota(data["origem"], data["destino"])}
 
 
