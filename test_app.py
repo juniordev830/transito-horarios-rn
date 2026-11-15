@@ -35,3 +35,15 @@ class ProjetoTest(unittest.TestCase):
         for tempos in ([], [True], [-1], [float("nan")]):
             with self.subTest(tempos=tempos), self.assertRaises(ValueError):
                 run(dict(origem="A", destino="B", faixas=[dict(hora="08:00", tempos=tempos)]))
+
+    def test_exige_hora_local_estrita(self):
+        for hora in ("8:00", "0800", "08:00:00", "24:00", "12:60", "08:00+00:00"):
+            with self.subTest(hora=hora), self.assertRaisesRegex(ValueError, "HH:MM"):
+                run(dict(origem="A", destino="B", faixas=[dict(hora=hora, tempos=[20])]))
+
+    def test_rejeita_faixas_duplicadas_ou_vazias(self):
+        with self.assertRaisesRegex(ValueError, "duplicada"):
+            run(dict(origem="A", destino="B", faixas=[
+                dict(hora="08:00", tempos=[20]), dict(hora="08:00", tempos=[22])]))
+        with self.assertRaisesRegex(ValueError, "ao menos uma faixa"):
+            run(dict(origem="A", destino="B", faixas=[]))
