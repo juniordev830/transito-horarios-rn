@@ -13,7 +13,7 @@ python -m unittest -v
 
 ## Uso
 
-Informe os minutos observados por faixa horária. O relatório calcula medianas, número de observações e ordem do menor para o maior tempo. Abra o Google Maps para consultar sua rota antes de sair.
+Informe os minutos observados por faixa horária local, sempre em `HH:MM` (00:00 a 23:59). Cada horário deve aparecer uma única vez e ter pelo menos uma observação; o relatório exige ao menos uma faixa. Ele calcula medianas, número de observações e ordem do menor para o maior tempo. Abra o Google Maps para consultar sua rota antes de sair.
 
 ## Google Maps
 
