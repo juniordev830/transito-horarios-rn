@@ -73,3 +73,40 @@ class ProjetoTest(unittest.TestCase):
         data["faixas"][0]["tempos"] = [10**400]
         with self.assertRaisesRegex(ValueError, "número finito"):
             run(data)
+
+
+class JsonEstritoCliTest(unittest.TestCase):
+    def test_cli_rejeita_constantes_numericas_nao_padronizadas(self):
+        exemplo = json.loads((ROOT / "exemplo.json").read_text(encoding="utf-8"))
+        with TemporaryDirectory() as pasta:
+            entrada = Path(pasta) / "entrada.json"
+            for constante in ("NaN", "Infinity", "-Infinity"):
+                with self.subTest(constante=constante):
+                    exemplo["metadados"] = {"observacao": "CONSTANTE_TESTE"}
+                    entrada.write_text(
+                        json.dumps(exemplo).replace('"CONSTANTE_TESTE"', constante),
+                        encoding="utf-8",
+                    )
+                    resultado = subprocess.run(
+                        [sys.executable, str(ROOT / "app.py"), str(entrada)],
+                        capture_output=True, text=True, encoding="utf-8",
+                    )
+                    self.assertEqual(resultado.returncode, 2)
+                    self.assertIn(constante, resultado.stderr)
+                    self.assertEqual(resultado.stdout, "")
+
+    def test_cli_rejeita_campos_json_repetidos_em_objetos_internos(self):
+        exemplo = (ROOT / "exemplo.json").read_text(encoding="utf-8").rstrip()
+        with TemporaryDirectory() as pasta:
+            entrada = Path(pasta) / "entrada.json"
+            entrada.write_text(
+                exemplo[:-1] + ', "metadados": {"origem": 1, "origem": 2}}',
+                encoding="utf-8",
+            )
+            resultado = subprocess.run(
+                [sys.executable, str(ROOT / "app.py"), str(entrada)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertEqual(resultado.returncode, 2)
+        self.assertIn("Campo JSON repetido", resultado.stderr)
+        self.assertEqual(resultado.stdout, "")
