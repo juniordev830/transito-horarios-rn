@@ -30,3 +30,7 @@ de `melhor_faixa` os horários com pelo menos três viagens registradas. A lista
 `faixas` continua mostrando todos os horários com suas medianas e contagens.
 Se nenhum horário atingir o mínimo, `melhor_faixa` vale `null`. O padrão é uma
 observação.
+
+## Exportação para planilha
+
+Use `python app.py exemplo.json --csv > relatorio.csv` para exportar as faixas horárias e o número de observações. O CSV usa ponto e vírgula, conserva a ordem do relatório e inclui o cabeçalho mesmo quando a seleção está vazia. O JSON continua sendo a saída padrão.
