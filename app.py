@@ -95,6 +95,19 @@ import json
 from pathlib import Path
 
 
+def objeto_sem_campos_repetidos(pares):
+    objeto = {}
+    for chave, valor in pares:
+        if chave in objeto:
+            raise ValueError(f"Campo JSON repetido: {chave!r}.")
+        objeto[chave] = valor
+    return objeto
+
+
+def rejeitar_constante_json(constante):
+    raise ValueError(f"Constante numérica inválida em JSON: {constante}.")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("entrada", type=Path, help="Arquivo JSON com os dados")
@@ -102,7 +115,11 @@ def main():
 
     try:
         with args.entrada.open(encoding="utf-8-sig") as source:
-            data = json.load(source)
+            data = json.load(
+                source,
+                object_pairs_hook=objeto_sem_campos_repetidos,
+                parse_constant=rejeitar_constante_json,
+            )
         result = run(data)
     except (KeyError, TypeError, ValueError, OSError) as exc:
         parser.exit(2, f"Erro nos dados ou na execução: {exc}\n")
