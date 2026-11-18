@@ -61,7 +61,9 @@ def _mediana(tempos):
     return inferior + (superior - inferior) / 2
 
 
-def run(data):
+def run(data, *, minimo_observacoes=1):
+    if type(minimo_observacoes) is not int or minimo_observacoes < 1:
+        raise ValueError("O mínimo de observações deve ser um inteiro positivo.")
     if not isinstance(data, dict):
         raise ValueError("A entrada deve ser um objeto JSON.")
     if not isinstance(data.get("faixas"), list):
@@ -86,7 +88,9 @@ def run(data):
     if not faixas:
         raise ValueError("Informe ao menos uma faixa horária.")
     faixas.sort(key=lambda item: (item["mediana_minutos"], -item["observacoes"], item["hora"]))
-    return {"faixas": faixas, "melhor_faixa": faixas[0]["hora"],
+    melhor = next((faixa["hora"] for faixa in faixas
+                   if faixa["observacoes"] >= minimo_observacoes), None)
+    return {"faixas": faixas, "melhor_faixa": melhor,
             "google_maps": rota(data["origem"], data["destino"])}
 
 
@@ -111,6 +115,8 @@ def rejeitar_constante_json(constante):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("entrada", type=Path, help="Arquivo JSON com os dados")
+    parser.add_argument("--minimo-observacoes", type=int, default=1, metavar="N",
+                        help="Recomendar somente faixas com pelo menos N viagens observadas")
     args = parser.parse_args()
 
     try:
@@ -120,7 +126,7 @@ def main():
                 object_pairs_hook=objeto_sem_campos_repetidos,
                 parse_constant=rejeitar_constante_json,
             )
-        result = run(data)
+        result = run(data, minimo_observacoes=args.minimo_observacoes)
     except (KeyError, TypeError, ValueError, OSError) as exc:
         parser.exit(2, f"Erro nos dados ou na execução: {exc}\n")
 

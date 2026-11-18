@@ -22,3 +22,11 @@ Os links seguem a documentação de [Maps URLs](https://developers.google.com/ma
 ## Estado do projeto
 
 Versão inicial funcional por linha de comando, sem interface web. Usa apenas a biblioteca padrão do Python. Os testes executam os exemplos e verificam as regras do projeto.
+
+### Comparar horários com mais histórico
+
+Com `python app.py exemplo.json --minimo-observacoes 3`, só entram na escolha
+de `melhor_faixa` os horários com pelo menos três viagens registradas. A lista
+`faixas` continua mostrando todos os horários com suas medianas e contagens.
+Se nenhum horário atingir o mínimo, `melhor_faixa` vale `null`. O padrão é uma
+observação.
