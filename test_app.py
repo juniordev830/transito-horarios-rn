@@ -59,3 +59,17 @@ class ProjetoTest(unittest.TestCase):
                 dict(hora="08:00", tempos=[20]), dict(hora="08:00", tempos=[22])]))
         with self.assertRaisesRegex(ValueError, "ao menos uma faixa"):
             run(dict(origem="A", destino="B", faixas=[]))
+
+    def test_rejeita_objetos_json_no_lugar_de_listas(self):
+        for faixas in ({"hora": "08:00"}, [{"hora": "08:00", "tempos": {"20": 20}}]):
+            with self.subTest(faixas=faixas), self.assertRaisesRegex(ValueError, "lista"):
+                run(dict(origem="A", destino="B", faixas=faixas))
+
+    def test_mediana_permanece_finita_com_tempos_grandes(self):
+        data = dict(origem="A", destino="B", faixas=[dict(hora="08:00", tempos=[1e308, 1e308])])
+        result = run(data)
+        self.assertEqual(result["faixas"][0]["mediana_minutos"], 1e308)
+        json.dumps(result, allow_nan=False)
+        data["faixas"][0]["tempos"] = [10**400]
+        with self.assertRaisesRegex(ValueError, "número finito"):
+            run(data)

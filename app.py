@@ -11,7 +11,11 @@ def texto(value):
 
 
 def numero(value, minimo=0):
-    if type(value) not in (int, float) or not isfinite(value) or value < minimo:
+    try:
+        valido = type(value) in (int, float) and isfinite(value) and value >= minimo
+    except OverflowError:
+        valido = False
+    if not valido:
         raise ValueError(f"Use um número finito a partir de {minimo}.")
     return value
 
@@ -45,15 +49,30 @@ def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
 
 from datetime import time
 import re
-from statistics import median
+
+
+def _mediana(tempos):
+    ordenados = sorted(tempos)
+    meio = len(ordenados) // 2
+    superior = ordenados[meio]
+    if len(ordenados) % 2:
+        return superior
+    inferior = ordenados[meio - 1]
+    return inferior + (superior - inferior) / 2
 
 
 def run(data):
+    if not isinstance(data, dict):
+        raise ValueError("A entrada deve ser um objeto JSON.")
+    if not isinstance(data.get("faixas"), list):
+        raise ValueError("Informe as faixas como uma lista.")
     faixas = []
     horarios = set()
     for item in data["faixas"]:
+        if not isinstance(item, dict) or not isinstance(item.get("tempos"), list):
+            raise ValueError("Cada faixa deve ser um objeto com uma lista de tempos.")
         hora_texto = texto(item["hora"])
-        if not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", hora_texto):
+        if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", hora_texto):
             raise ValueError("Use horas e minutos locais no formato HH:MM.")
         hora = time.fromisoformat(hora_texto)
         if hora_texto in horarios:
@@ -63,7 +82,7 @@ def run(data):
         if not tempos:
             raise ValueError("Informe ao menos uma observação de tempo por faixa.")
         faixas.append({"hora": hora.isoformat(timespec="minutes"),
-                       "mediana_minutos": median(tempos), "observacoes": len(tempos)})
+                       "mediana_minutos": _mediana(tempos), "observacoes": len(tempos)})
     if not faixas:
         raise ValueError("Informe ao menos uma faixa horária.")
     faixas.sort(key=lambda item: (item["mediana_minutos"], -item["observacoes"], item["hora"]))
@@ -84,8 +103,6 @@ def main():
     try:
         with args.entrada.open(encoding="utf-8-sig") as source:
             data = json.load(source)
-        if not isinstance(data, dict):
-            raise ValueError("A entrada deve ser um objeto JSON.")
         result = run(data)
     except (KeyError, TypeError, ValueError, OSError) as exc:
         parser.exit(2, f"Erro nos dados ou na execução: {exc}\n")
