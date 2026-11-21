@@ -66,13 +66,14 @@ def run(data, *, minimo_observacoes=1):
         raise ValueError("O mínimo de observações deve ser um inteiro positivo.")
     if not isinstance(data, dict):
         raise ValueError("A entrada deve ser um objeto JSON.")
-    if not isinstance(data.get("faixas"), list):
-        raise ValueError("Informe as faixas como uma lista.")
+    if not isinstance(data.get("faixas"), list) or len(data["faixas"]) > 1440:
+        raise ValueError("Informe até 1440 faixas horárias em uma lista.")
     faixas = []
     horarios = set()
     for item in data["faixas"]:
-        if not isinstance(item, dict) or not isinstance(item.get("tempos"), list):
-            raise ValueError("Cada faixa deve ser um objeto com uma lista de tempos.")
+        if (not isinstance(item, dict) or not isinstance(item.get("tempos"), list)
+                or len(item["tempos"]) > 1000):
+            raise ValueError("Cada faixa deve ter uma lista de até 1000 tempos observados.")
         hora_texto = texto(item["hora"])
         if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", hora_texto):
             raise ValueError("Use horas e minutos locais no formato HH:MM.")
@@ -101,6 +102,8 @@ from relatorio_csv import escrever_csv
 import json
 from pathlib import Path
 
+MAX_JSON_BYTES = 1_000_000
+
 
 def objeto_sem_campos_repetidos(pares):
     objeto = {}
@@ -124,17 +127,20 @@ def main():
     args = parser.parse_args()
 
     try:
-        entrada = nullcontext(sys.stdin.buffer) if args.entrada == "-" else Path(args.entrada).open(encoding="utf-8-sig")
+        entrada = nullcontext(sys.stdin.buffer) if args.entrada == "-" else Path(args.entrada).open("rb")
         with entrada as source:
-            data = json.load(
-                source,
-                object_pairs_hook=objeto_sem_campos_repetidos,
-                parse_constant=rejeitar_constante_json,
-            )
+            raw = source.read(MAX_JSON_BYTES + 1)
+        if len(raw) > MAX_JSON_BYTES:
+            raise ValueError("JSON excede o limite de 1 MB.")
+        data = json.loads(
+            raw,
+            object_pairs_hook=objeto_sem_campos_repetidos,
+            parse_constant=rejeitar_constante_json,
+        )
         result = run(data, minimo_observacoes=args.minimo_observacoes)
     except RecursionError:
         parser.exit(2, "O JSON tem níveis de aninhamento demais.\n")
-    except (KeyError, TypeError, ValueError, OSError) as exc:
+    except (KeyError, TypeError, ValueError, UnicodeError, OSError) as exc:
         parser.exit(2, f"Erro nos dados ou na execução: {exc}\n")
 
     sys.stdout.reconfigure(encoding="utf-8", newline="\n")
