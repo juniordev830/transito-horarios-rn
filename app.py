@@ -66,13 +66,14 @@ def run(data, *, minimo_observacoes=1):
         raise ValueError("O mínimo de observações deve ser um inteiro positivo.")
     if not isinstance(data, dict):
         raise ValueError("A entrada deve ser um objeto JSON.")
-    if not isinstance(data.get("faixas"), list):
-        raise ValueError("Informe as faixas como uma lista.")
+    if not isinstance(data.get("faixas"), list) or len(data["faixas"]) > 1440:
+        raise ValueError("Informe até 1440 faixas horárias em uma lista.")
     faixas = []
     horarios = set()
     for item in data["faixas"]:
-        if not isinstance(item, dict) or not isinstance(item.get("tempos"), list):
-            raise ValueError("Cada faixa deve ser um objeto com uma lista de tempos.")
+        if (not isinstance(item, dict) or not isinstance(item.get("tempos"), list)
+                or len(item["tempos"]) > 1000):
+            raise ValueError("Cada faixa deve ter uma lista de até 1000 tempos observados.")
         hora_texto = texto(item["hora"])
         if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", hora_texto):
             raise ValueError("Use horas e minutos locais no formato HH:MM.")
