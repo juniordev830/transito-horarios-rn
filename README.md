@@ -40,3 +40,4 @@ Também é possível encadear a ferramenta com outro comando usando `-` como ent
 ```bash
 cat exemplo.json | python app.py -
 ```
+\nPara evitar arquivos de entrada excessivos, a ferramenta aceita até 1440 faixas horárias e no máximo 1000 observações por faixa; os tempos continuam sendo comparados pela mediana.\n
