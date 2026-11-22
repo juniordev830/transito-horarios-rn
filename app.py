@@ -7,7 +7,10 @@ from math import isfinite
 def texto(value):
     if not isinstance(value, str) or not value.strip():
         raise ValueError("Use texto não vazio.")
-    return value.strip()
+    normalized = value.strip()
+    if len(normalized) > 300 or any(ord(char) < 32 or ord(char) == 127 for char in normalized):
+        raise ValueError("Texto deve ter até 300 caracteres, sem controles.")
+    return normalized
 
 
 def numero(value, minimo=0):
@@ -20,6 +23,7 @@ def numero(value, minimo=0):
     return value
 
 
+from collections.abc import Mapping, Set
 from urllib.parse import urlencode
 
 
@@ -34,7 +38,7 @@ def _url(acao, parametros):
 
 
 def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
-    if isinstance(paradas, (str, bytes)) or paradas is None:
+    if isinstance(paradas, (str, bytes, Mapping, Set)) or paradas is None:
         raise ValueError("As paradas devem ser uma sequência de endereços.")
     try:
         from itertools import islice
@@ -43,8 +47,10 @@ def rota(origem, destino, modo="carro", paradas=(), evitar_pedagios=False):
         raise ValueError("As paradas devem ser uma sequência de endereços.") from exc
     if len(pontos) > 3 or any("|" in parada for parada in pontos):
         raise ValueError("Use até 3 paradas por link e evite o caractere |.")
-    if modo not in MODOS:
+    if not isinstance(modo, str) or modo not in MODOS:
         raise ValueError(f"Modo desconhecido: {modo}")
+    if type(evitar_pedagios) is not bool:
+        raise ValueError("evitar_pedagios deve ser booleano.")
     params = {"origin": texto(origem), "destination": texto(destino), "travelmode": MODOS[modo]}
     if pontos:
         params["waypoints"] = "|".join(pontos)
