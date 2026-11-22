@@ -7,7 +7,10 @@ from math import isfinite
 def texto(value):
     if not isinstance(value, str) or not value.strip():
         raise ValueError("Use texto não vazio.")
-    return value.strip()
+    normalized = value.strip()
+    if len(normalized) > 300 or any(ord(char) < 32 or ord(char) == 127 for char in normalized):
+        raise ValueError("Texto deve ter até 300 caracteres, sem controles.")
+    return normalized
 
 
 def numero(value, minimo=0):
