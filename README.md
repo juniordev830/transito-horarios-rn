@@ -44,3 +44,8 @@ cat exemplo.json | python app.py -
 Para evitar arquivos de entrada excessivos, a ferramenta aceita até 1440 faixas horárias e no máximo 1000 observações por faixa; os tempos continuam sendo comparados pela mediana.
 
 Arquivos e entrada padrão JSON são limitados a 1 MB (1.000.000 bytes). Conteúdos maiores são rejeitados antes do cálculo de medianas.
+
+
+## Novo recurso
+
+Com `diagnostico: true`, cada faixa informa mínimo, máximo, amplitude e suficiência da amostra. A mediana e a escolha de faixa permanecem baseadas nas observações cadastradas.

@@ -76,6 +76,9 @@ def run(data, *, minimo_observacoes=1):
         raise ValueError("Informe até 1440 faixas horárias em uma lista.")
     faixas = []
     horarios = set()
+    diagnostico = data.get("diagnostico", False)
+    if type(diagnostico) is not bool:
+        raise ValueError("diagnostico deve ser booleano.")
     for item in data["faixas"]:
         if (not isinstance(item, dict) or not isinstance(item.get("tempos"), list)
                 or len(item["tempos"]) > 1000):
@@ -92,6 +95,10 @@ def run(data, *, minimo_observacoes=1):
             raise ValueError("Informe ao menos uma observação de tempo por faixa.")
         faixas.append({"hora": hora.isoformat(timespec="minutes"),
                        "mediana_minutos": _mediana(tempos), "observacoes": len(tempos)})
+        if diagnostico:
+            faixas[-1].update(minimo_minutos=min(tempos), maximo_minutos=max(tempos),
+                              amplitude_minutos=max(tempos) - min(tempos),
+                              amostra_suficiente=len(tempos) >= minimo_observacoes)
     if not faixas:
         raise ValueError("Informe ao menos uma faixa horária.")
     faixas.sort(key=lambda item: (item["mediana_minutos"], -item["observacoes"], item["hora"]))
