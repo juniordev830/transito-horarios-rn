@@ -1,5 +1,7 @@
 # Horários de deslocamento na Grande Natal
 
+**Navegação** · [Rodar](#rodar) · [Uso](#uso) · [Google Maps](#google-maps) · [Código e estudo](docs/ENGENHARIA_REVERSA.md)
+
 Compare faixas horárias com base nos tempos que você observou no mesmo trajeto.
 
 ## Rodar
@@ -44,3 +46,9 @@ cat exemplo.json | python app.py -
 Para evitar arquivos de entrada excessivos, a ferramenta aceita até 1440 faixas horárias e no máximo 1000 observações por faixa; os tempos continuam sendo comparados pela mediana.
 
 Arquivos e entrada padrão JSON são limitados a 1 MB (1.000.000 bytes). Conteúdos maiores são rejeitados antes do cálculo de medianas.
+
+## Código e roteiro de estudo
+
+Como uma observação muito alta muda a média e a mediana de uma faixa? O [guia de engenharia reversa](docs/ENGENHARIA_REVERSA.md) reúne o mapa dos módulos e uma pergunta técnica baseada no projeto.
+
+Mantido por [João Junior](https://github.com/juniordev830).
